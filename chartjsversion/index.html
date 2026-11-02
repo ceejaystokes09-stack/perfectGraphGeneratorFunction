@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chart.js function example</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="data-tools">
+      <label for="csv-file">Choose CSV data</label>
+      <input id="csv-file" type="file" accept=".csv,text/csv">
+      <a href="./template.csv" download>Download CSV template</a>
+    </div>
+    <p id="status" role="status" aria-live="polite">Choose a CSV file to display it.</p>
+    <div id="chart-container">
+      <canvas id="chart" aria-label="Sales and costs chart"></canvas>
+    </div>
+    <details class="api-reference">
+      <summary>Chart API reference</summary>
+      <div class="api-content">
+        <p>Use the column names from your CSV or JSON exactly as written, including capitalization. The examples below use <code>Genre</code>, <code>Subscription Type</code>, and numeric <code>Listeners</code> columns.</p>
+
+        <h2>Input data</h2>
+        <dl>
+          <dt><code>chart(data, options?)</code></dt>
+          <dd>Start a chart builder. <code>data</code> may be row objects, column arrays, a numeric array, CSV text, JSON text, or a Chart.js config. <code>options</code> can set <code>format</code> to <code>"csv"</code>, <code>"json"</code>, or <code>"tsv"</code>.</dd>
+          <dt><code>chartjs.parseCSV(text, options?)</code></dt>
+          <dd>Parse CSV to row objects. Options: <code>delimiter</code> (default comma), <code>header</code> (default true), and <code>dynamicTyping</code> (default true).</dd>
+          <dt><code>chartjs.parseJSON(text)</code> / <code>chartjs.parseData(input, options?)</code></dt>
+          <dd>Parse JSON directly, or automatically parse CSV/JSON input. Use <code>parseData</code> when you need an explicit format.</dd>
+          <dt><code>await chartjs.fromFile(file, options?)</code></dt>
+          <dd>Read a browser <code>File</code> or <code>Blob</code> and return a builder. The filename extension is used to infer CSV or JSON.</dd>
+          <dt><code>await chartjs.fromURL(url, options?)</code></dt>
+          <dd>Fetch a same-origin or CORS-enabled data URL and return a builder. Options may include <code>format</code> and <code>fetchOptions</code>.</dd>
+        </dl>
+
+        <h2>Chart types and mappings</h2>
+        <p><code>.plot(type, mapping?)</code> selects any Chart.js type; <code>.type(type)</code> is an alias. Convenience methods are <code>.line(mapping)</code>, <code>.scatter(mapping)</code>, <code>.bar(mapping)</code>, <code>.area(mapping)</code>, <code>.pie(mapping)</code>, <code>.doughnut(mapping)</code>, <code>.histogram(mapping)</code>, <code>.box(mapping)</code>, <code>.violin(mapping)</code>, and <code>.heatmap(mapping)</code>.</p>
+        <dl>
+          <dt><code>.x(field)</code>, <code>.y(field)</code></dt>
+          <dd>Set the x or y field mapping separately instead of passing it to a chart-type method.</dd>
+          <dt><code>.labels(field)</code>, <code>.values(field)</code></dt>
+          <dd>Set the category labels and values fields used by pie and doughnut charts.</dd>
+          <dt><code>{ x, y }</code></dt>
+          <dd>Map columns to axes. For line, bar, and area charts, <code>y</code> can be one column or an array of columns. Bar charts combine repeated x labels.</dd>
+          <dt><code>{ labels, values }</code></dt>
+          <dd>Map category labels and numeric values for pie and doughnut charts.</dd>
+          <dt><code>{ x, y, r }</code></dt>
+          <dd>Map numeric horizontal, vertical, and radius columns for a bubble chart, using <code>.plot("bubble", mapping)</code>.</dd>
+          <dt><code>{ x, y, z }</code></dt>
+          <dd>Heatmaps use x/y labels and a 2D numeric <code>z</code> matrix. Histograms use <code>x</code> or <code>y</code> for the numeric input column. Box and violin charts use <code>y</code> for one or more numeric columns.</dd>
+        </dl>
+        <pre><code>chart(rows).line({ x: "Month", y: ["Sales", "Costs"] });
+chart(rows).pie({ labels: "Genre", values: "Listeners" });
+chart(rows).plot("bubble", { x: "Age", y: "Listeners", r: "Count" });</code></pre>
+
+        <h2>Grouping and reductions</h2>
+        <dl>
+          <dt><code>.groupBy(field)</code></dt>
+          <dd>Choose the x/category field to group on. Repeated values become one chart label.</dd>
+          <dt><code>.sum(field?)</code>, <code>.mean(field?)</code>, <code>.median(field?)</code></dt>
+          <dd>Reduce numeric values per x group. If <code>field</code> is omitted, the current y mapping is used.</dd>
+          <dt><code>.min(field?)</code>, <code>.max(field?)</code>, <code>.range(field?)</code></dt>
+          <dd>Return the smallest value, largest value, or max-minus-min for each group.</dd>
+          <dt><code>.count(field?)</code></dt>
+          <dd>Count non-empty values. For a categorical y field, produce one series per category and count rows within each x group.</dd>
+          <dt><code>.std(field?)</code>, <code>.var(field?)</code></dt>
+          <dd>Calculate sample standard deviation or sample variance per group.</dd>
+          <dt><code>.aggregate(method, field?)</code> / <code>.agg(method, field?)</code></dt>
+          <dd>Generic form. Supported methods: <code>sum</code>, <code>mean</code>, <code>median</code>, <code>min</code>, <code>max</code>, <code>range</code>, <code>count</code>, <code>std</code>, and <code>var</code>.</dd>
+        </dl>
+        <pre><code>// Count subscription types within each genre.
+chart(rows).bar({ x: "Genre", y: "Subscription Type" }).count();
+
+// Sum a numeric column for each genre.
+chart(rows).groupBy("Genre").sum("Listeners").bar();
+
+// Average a numeric column for each genre.
+chart(rows).groupBy("Genre").mean("Listeners").bar();</code></pre>
+
+        <h2>Labels, styling, and output</h2>
+        <dl>
+          <dt><code>.title(text)</code>, <code>.xlabel(text)</code>, <code>.ylabel(text)</code></dt>
+          <dd>Set the chart title and axis titles.</dd>
+          <dt><code>.colors(colorOrArray)</code> / <code>.color(color)</code></dt>
+          <dd>Set one color or a palette for datasets/categories. <code>.color()</code> is an alias for <code>.colors()</code>.</dd>
+          <dt><code>.bins(count)</code></dt>
+          <dd>Set the number of bins for a histogram.</dd>
+          <dt><code>.trace(options)</code>, <code>.layout(options)</code>, <code>.config(options)</code></dt>
+          <dd>Pass Chart.js dataset options, chart options, or top-level config options.</dd>
+          <dt><code>.toConfig()</code> / <code>chartjs.buildConfig(data, settings?)</code></dt>
+          <dd>Build a Chart.js configuration without rendering it. <code>settings</code> may contain <code>kind</code>/<code>type</code>, field mappings, <code>aggregation</code>, <code>title</code>, <code>xlabel</code>, <code>ylabel</code>, <code>colors</code>, <code>trace</code>, <code>options</code>, and <code>config</code>.</dd>
+          <dt><code>.render(target, options?)</code></dt>
+          <dd>Render to a canvas or an element containing a canvas. Returns the Chart.js instance. <code>options</code> may specify a Chart constructor or config overrides.</dd>
+          <dt><code>.downloadImage(filename?, options?)</code> / <code>.download(filename?, options?)</code></dt>
+          <dd>Download the rendered chart. Options accept an image <code>type</code> (PNG by default) and <code>quality</code>.</dd>
+          <dt><code>chartjs.downloadImage(chartOrCanvas, filename?, options?)</code></dt>
+          <dd>Standalone version of image export for an existing Chart.js instance or canvas.</dd>
+        </dl>
+        <pre><code>const builder = chart(rows)
+  .bar({ x: "Genre", y: "Listeners" })
+  .sum()
+  .colors(["#14745c", "#e06b43"])
+  .title("Total listeners by genre")
+  .xlabel("Genre")
+  .ylabel("Listeners");
+
+builder.render("#chart");
+builder.downloadImage("listeners.png");</code></pre>
+      </div>
+    </details>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-boxplot@4.4.5/build/index.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@3.1.0"></script>
+    <script src="./index.js"></script>
+    <script>
+      /*
+       * CHART.JS HELPER EXAMPLES
+       * These are examples only. The live file-picker demo below is what runs.
+       *
+       * 1. Load and parse CSV or JSON text. CSV headers become object keys.
+       * const csvText = "Genre,Listeners\nRock,12\nPop,18";
+       * const jsonText = '[{"Genre":"Rock","Listeners":12}]';
+       * const csvRows = chartjs.parseCSV(csvText);
+       * const jsonRows = chartjs.parseJSON(jsonText);
+       * const csvChart = chart(csvText); // CSV/JSON strings are auto-detected.
+       *
+       * 2. Load a selected browser file or fetch a data URL.
+       * const builderFromFile = await chartjs.fromFile(fileInput.files[0]);
+       * const builderFromURL = await chartjs.fromURL("./listeners.json");
+       *
+       * 3. Count category combinations. Repeated genres are grouped into one
+       *    x-axis label; each subscription type becomes a series of row counts.
+       * const categoryChart = chart(rows)
+       *   .bar({ x: "Genre", y: "Subscription Type" })
+       *   .count()
+       *   .title("Subscription types by genre")
+       *   .xlabel("Genre")
+       *   .ylabel("Number of subscriptions");
+       *
+       * 4. Group numeric data and reduce each group. This sums Listeners for
+       *    every genre. Other reductions: mean, median, min, max, range, count,
+       *    std (sample standard deviation), and var (sample variance).
+       * const totals = chart(rows)
+       *   .groupBy("Genre")
+       *   .sum("Listeners")
+       *   .bar();
+       * const averages = chart(rows).groupBy("Genre").mean("Listeners").bar();
+       * const spreads = chart(rows).groupBy("Genre").range("Listeners").bar();
+       * // Generic spelling also works: chart(rows).groupBy("Genre").agg("median", "Listeners").bar()
+       *
+       * 5. Choose different chart types and map their columns.
+       * chart(rows).line({ x: "Month", y: ["Sales", "Costs"] });
+       * chart(rows).scatter({ x: "Age", y: "Listeners" });
+       * chart(rows).area({ x: "Month", y: "Listeners" });
+       * chart(rows).pie({ labels: "Genre", values: "Listeners" });
+      * chart(rows).doughnut({ labels: "Genre", values: "Listeners" });
+       * chart(rows).histogram({ x: "Listeners" });
+      * chart(rows).box({ y: "Listeners" });
+      * chart(rows).violin({ y: "Listeners" });
+      * chart(matrix).heatmap({ x: ["Mon", "Tue"], y: ["A", "B"], z: [[4, 7], [2, 9]] });
+      * chart(rows).plot("bubble", { x: "Age", y: "Listeners", r: "Count" });
+      * chart(rows).plot("radar", { x: "Month", y: ["Sales", "Costs"] });
+      * chart(rows).plot("polarArea", { labels: "Genre", values: "Listeners" });
+       *
+       * 6. Set colors and Chart.js options. Render into a canvas or an element
+       *    containing a canvas, then export the rendered chart as a PNG.
+       * const customChart = chart(rows)
+       *   .bar({ x: "Genre", y: "Listeners" })
+       *   .colors(["#14745c", "#e06b43", "#3767a5"])
+       *   .layout({ plugins: { legend: { position: "bottom" } } });
+       * customChart.render("#chart");
+       * customChart.downloadImage("listeners.png");
+       *
+       * 7. Inspect the Chart.js config without rendering.
+       * const config = chart(rows).bar({ x: "Genre", y: "Listeners" }).toConfig();
+       */
+      const csvFile = document.querySelector("#csv-file");
+      const status = document.querySelector("#status");
+      let activeChart;
+
+      csvFile.addEventListener("change", async () => {
+        const [file] = csvFile.files ?? [];
+        if (!file) return;
+
+        try {
+          const builder = await chartjs.fromFile(file);
+          activeChart?.destroy();
+          activeChart = builder
+            .bar({ x: "Genre", y: "Subscription Type" })
+            .count()
+            .colors(["#14745c", "#e06b43"])
+            .title("Subscription types most popular genres.")
+            .xlabel("Genre")
+            .ylabel("Number of subscriptions")
+            .layout({
+              interaction: { intersect: false, mode: "index" },
+              plugins: { legend: { position: "top" } },
+            })
+            .render("#chart");
+          status.textContent = `Loaded ${file.name}`;
+        } catch (error) {
+          status.textContent = error.message;
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chart function example</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div id="chart" aria-label="Sales and costs chart"></div>
+
+    <script src="https://cdn.plot.ly/plotly-3.1.0.min.js"></script>
+    <script src="./index.js"></script>
+    <script>
+      const monthlyData = [
+        { month: "Jan", sales: 120, costs: 70 },
+        { month: "Feb", sales: 160, costs: 85 },
+        { month: "Mar", sales: 145, costs: 78 },
+        { month: "Apr", sales: 195, costs: 96 },
+        { month: "May", sales: 225, costs: 112 },
+      ];
+
+      chart(monthlyData)
+        .line({ x: "month", y: ["sales", "costs"] })
+        .title("Monthly sales and costs")
+        .xlabel("Month")
+        .ylabel("Amount")
+        .layout({ autosize: true })
+        .config({ responsive: true, displaylogo: false })
+        .render("#chart")
+        .catch(console.error);
+    </script>
+  </body>
+</html>
